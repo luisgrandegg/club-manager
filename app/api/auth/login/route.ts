@@ -4,7 +4,7 @@ import { defaultLocale } from "@/app/i18n";
 import { getBaseUrl, setStateCookie } from "@/lib/auth/session";
 
 function sanitizeRedirectPath(path: string | null) {
-  if (!path || !path.startsWith("/")) return `/${defaultLocale}`;
+  if (!path || !path.startsWith("/")) return `/`;
   return path;
 }
 

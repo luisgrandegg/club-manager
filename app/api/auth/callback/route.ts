@@ -57,9 +57,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const state = searchParams.get("state");
-  const storedState = readStateCookie();
+  const storedState = await readStateCookie();
   const baseUrl = getBaseUrl();
-  const redirectPath = storedState?.redirectTo ?? `/${defaultLocale}`;
+  const redirectPath = storedState?.redirectTo ?? `/`;
   const redirectTarget = `${baseUrl}${redirectPath}`;
 
   if (!code || !state || !storedState || storedState.state !== state) {

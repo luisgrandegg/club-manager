@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { defaultLocale } from "@/app/i18n";
 import { clearSessionCookie } from "@/lib/auth/session";
 
 export async function POST() {
-  const response = NextResponse.redirect(`/${defaultLocale}`);
+  const response = NextResponse.redirect(new URL("/", process.env.NEXTAUTH_URL || "http://localhost:3000"));
   clearSessionCookie(response);
   return response;
 }

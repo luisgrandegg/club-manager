@@ -19,14 +19,12 @@ export const metadata: Metadata = {
     "Manage football and basketball teams for kids under 16 with scheduling, messaging, and transparent pricing.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-  params,
 }: Readonly<{
   children: React.ReactNode;
-  params?: { locale?: string };
 }>) {
-  const locale = params?.locale && isLocale(params.locale) ? params.locale : defaultLocale;
+  const locale = defaultLocale;
 
   return (
     <html lang={locale as Locale}>

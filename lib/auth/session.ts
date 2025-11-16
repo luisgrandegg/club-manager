@@ -1,17 +1,11 @@
 import type { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "node:crypto";
-
-export type SessionUser = {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-  picture?: string | null;
-};
-
-const SESSION_COOKIE_NAME = "cm_session";
-const STATE_COOKIE_NAME = "cm_oauth_state";
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
+import { SessionUser } from "./SessionUser";
+import { SESSION_COOKIE_NAME,
+  STATE_COOKIE_NAME,
+  SESSION_MAX_AGE_SECONDS
+} from './constants';
 
 const encoder = new TextEncoder();
 
@@ -23,15 +17,15 @@ function isProduction() {
   return process.env.NODE_ENV === "production";
 }
 
-function base64urlEncode(data: string | Buffer) {
+export function base64urlEncode(data: string | Buffer) {
   return Buffer.from(data).toString("base64url");
 }
 
-function base64urlDecode(encoded: string) {
+export function base64urlDecode(encoded: string) {
   return Buffer.from(encoded, "base64url").toString();
 }
 
-function signPayload(payload: string) {
+export function signPayload(payload: string) {
   const secret = getAuthSecret();
   if (!secret) return null;
 
@@ -57,48 +51,7 @@ export function createSessionToken(user: SessionUser) {
   return `${signatureSeed}.${signature}`;
 }
 
-export function readSessionFromCookies(): SessionUser | null {
-  const token = cookies().get(SESSION_COOKIE_NAME)?.value;
-  if (!token) return null;
 
-  const [encodedPayload, signature] = token.split(".");
-  if (!encodedPayload || !signature) return null;
-
-  const expectedSignature = signPayload(encodedPayload);
-  if (!expectedSignature || signature.length !== expectedSignature.length) {
-    return null;
-  }
-
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
-    return null;
-  }
-
-  try {
-    const payload = JSON.parse(base64urlDecode(encodedPayload)) as {
-      sub?: string;
-      name?: string | null;
-      email?: string | null;
-      picture?: string | null;
-      exp?: number;
-    };
-
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-      return null;
-    }
-
-    if (!payload.sub) return null;
-
-    return {
-      id: payload.sub,
-      name: payload.name,
-      email: payload.email,
-      picture: payload.picture,
-    };
-  } catch (error) {
-    console.error("Failed to read session", error);
-    return null;
-  }
-}
 
 export function setSessionCookie(response: NextResponse, token: string) {
   response.cookies.set(SESSION_COOKIE_NAME, token, {
@@ -111,7 +64,7 @@ export function setSessionCookie(response: NextResponse, token: string) {
 }
 
 export function clearSessionCookie(response: NextResponse) {
-  response.cookies.delete(SESSION_COOKIE_NAME, { path: "/" });
+  response.cookies.delete(SESSION_COOKIE_NAME);
 }
 
 export function setStateCookie(response: NextResponse, value: { state: string; redirectTo: string }) {
@@ -128,8 +81,9 @@ export function setStateCookie(response: NextResponse, value: { state: string; r
   );
 }
 
-export function readStateCookie() {
-  const cookie = cookies().get(STATE_COOKIE_NAME)?.value;
+export async function readStateCookie() {
+  const cookieHandler = await cookies();
+  const cookie = cookieHandler.get(STATE_COOKIE_NAME)?.value;
   if (!cookie) return null;
 
   try {
@@ -141,7 +95,7 @@ export function readStateCookie() {
 }
 
 export function clearStateCookie(response: NextResponse) {
-  response.cookies.delete(STATE_COOKIE_NAME, { path: "/" });
+  response.cookies.delete(STATE_COOKIE_NAME);
 }
 
 export function getBaseUrl() {
