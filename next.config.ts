@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
 
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "./lib/i18n/config";
+
 const nextConfig: NextConfig = {
   i18n: {
-    defaultLocale: "en",
-    locales: ["en"],
+    defaultLocale: DEFAULT_LOCALE,
+    locales: SUPPORTED_LOCALES,
   },
   images: {
     remotePatterns: [

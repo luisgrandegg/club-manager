@@ -1,13 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
+import { headers } from "next/headers";
 
-import { DEFAULT_LOCALE } from "@/lib/i18n/config";
 import { getHomeMessages } from "@/lib/i18n/home";
+import { resolveRequestLocale } from "@/lib/i18n/request";
 import { getSessionFromCookies } from "@/lib/session";
 
 export default function Home() {
   const session = getSessionFromCookies();
-  const locale = DEFAULT_LOCALE;
+  const locale = resolveRequestLocale(headers());
   const t = getHomeMessages(locale);
 
   return (
