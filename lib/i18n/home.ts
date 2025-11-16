@@ -5,7 +5,7 @@ export type Feature = {
   description: string;
 };
 
-export type Messages = {
+export type HomeMessages = {
   brand: {
     name: string;
     title: string;
@@ -29,7 +29,7 @@ export type Messages = {
   tips: Feature[];
 };
 
-export const messages: Record<string, Messages> = {
+const homeMessages: Record<string, HomeMessages> = {
   [DEFAULT_LOCALE]: {
     brand: {
       name: "Club Manager",
@@ -83,3 +83,7 @@ export const messages: Record<string, Messages> = {
     ],
   },
 };
+
+export function getHomeMessages(locale: string): HomeMessages {
+  return homeMessages[locale] ?? homeMessages[DEFAULT_LOCALE];
+}

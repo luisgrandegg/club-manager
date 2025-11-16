@@ -2,13 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { DEFAULT_LOCALE } from "@/lib/i18n/config";
-import { messages } from "@/lib/i18n/messages";
+import { getHomeMessages } from "@/lib/i18n/home";
 import { getSessionFromCookies } from "@/lib/session";
 
 export default function Home() {
   const session = getSessionFromCookies();
   const locale = DEFAULT_LOCALE;
-  const t = messages[locale] ?? messages[DEFAULT_LOCALE];
+  const t = getHomeMessages(locale);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 via-white to-zinc-100 text-zinc-900 dark:from-black dark:via-zinc-950 dark:to-black">
