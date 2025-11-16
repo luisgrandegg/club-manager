@@ -20,6 +20,20 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Authentication
+
+Google sign-in is available for users. Configure these environment variables before running the app locally or deploying:
+
+```
+GOOGLE_CLIENT_ID=<your Google OAuth client ID>
+GOOGLE_CLIENT_SECRET=<your Google OAuth client secret>
+AUTH_SECRET=<random string for signing session cookies>
+# Optional: set when the public URL is not http://localhost:3000
+AUTH_BASE_URL=https://your-domain.example
+```
+
+After the variables are set and Google OAuth redirect URIs include `AUTH_BASE_URL/api/auth/callback`, users can sign in with Google from the landing page header. A POST to `/api/auth/logout` clears the session cookie.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
