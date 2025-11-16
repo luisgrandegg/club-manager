@@ -82,6 +82,58 @@ const homeMessages: Record<string, HomeMessages> = {
       },
     ],
   },
+  es: {
+    brand: {
+      name: "Club Manager",
+      title: "Cuentas",
+      subtitle: "Demo de inicio de sesión con Google",
+    },
+    hero: {
+      headline: "Inicia sesión con Google para personalizar tu espacio del club",
+      description:
+        "Conecta tu cuenta de Google para sincronizar tu perfil, mantener la sesión de forma segura y ver cómo guardamos el estado de autenticación en el servidor.",
+      primaryCta: "Continuar con Google",
+      secondaryCta: "Cerrar sesión",
+      note: "Tus credenciales nunca tocan el navegador: los tokens se quedan en el servidor.",
+    },
+    session: {
+      title: "Sesión actual",
+      signedInLabel: "Sesión iniciada con Google",
+      signedOutLabel: "Sesión no iniciada",
+      missingSession:
+        "Empieza el flujo de acceso con Google para ver los detalles de tu sesión activa aquí.",
+      profileFallback: "Avatar del usuario",
+    },
+    callouts: [
+      {
+        title: "Cookies seguras",
+        description:
+          "Las cookies firmadas y solo accesibles por HTTP mantienen los tokens fuera de JavaScript en el cliente y validan la integridad en cada petición.",
+      },
+      {
+        title: "Intercambios en el servidor",
+        description:
+          "Los códigos OAuth se canjean en el servidor para que los secretos y tokens de acceso no aparezcan en el cliente.",
+      },
+      {
+        title: "Redirecciones flexibles",
+        description:
+          "Configura las URLs de callback con APP_URL para que coincidan fácilmente con tus entornos locales y desplegados.",
+      },
+    ],
+    tips: [
+      {
+        title: "Usa tu cuenta de confianza",
+        description:
+          "Solo las cuentas de Google permitidas por tu cliente OAuth pueden completar el inicio de sesión.",
+      },
+      {
+        title: "Coincide las URIs de redirección",
+        description:
+          "Asegúrate de que tu app de OAuth de Google incluya /api/auth/google/callback para cada entorno que uses.",
+      },
+    ],
+  },
 };
 
 export function getHomeMessages(locale: string): HomeMessages {
