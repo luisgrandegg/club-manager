@@ -1,9 +1,21 @@
+import Image from "next/image";
 import { locales, Locale, isLocale, defaultLocale } from "../i18n";
+import { readSessionFromCookies } from "@/lib/auth/session";
+
+export const dynamic = "force-dynamic";
 
 const translations: Record<Locale, {
   metaTitle: string;
   metaDescription: string;
   nav: { pricing: string; start: string };
+  auth: {
+    signIn: string;
+    signOut: string;
+    signedInAs: string;
+    unknownUser: string;
+    retry: string;
+    errors: { state: string; callback: string; generic: string };
+  };
   hero: {
     badge: string;
     title: string;
@@ -31,6 +43,18 @@ const translations: Record<Locale, {
     nav: {
       pricing: "Pricing",
       start: "Start for free",
+    },
+    auth: {
+      signIn: "Sign in with Google",
+      signOut: "Sign out",
+      signedInAs: "Signed in",
+      unknownUser: "Google user",
+      retry: "Please try again.",
+      errors: {
+        state: "We could not verify the sign-in request.",
+        callback: "We could not complete the Google sign-in flow.",
+        generic: "We could not sign you in with Google right now.",
+      },
     },
     hero: {
       badge: "⚽🏀 The platform for under-16 clubs",
@@ -165,6 +189,18 @@ const translations: Record<Locale, {
     nav: {
       pricing: "Precios",
       start: "Empieza gratis",
+    },
+    auth: {
+      signIn: "Accede con Google",
+      signOut: "Cerrar sesión",
+      signedInAs: "Sesión iniciada",
+      unknownUser: "Usuario de Google",
+      retry: "Inténtalo de nuevo.",
+      errors: {
+        state: "No pudimos verificar la petición de inicio de sesión.",
+        callback: "No pudimos completar el acceso con Google.",
+        generic: "No podemos iniciar sesión con Google ahora mismo.",
+      },
     },
     hero: {
       badge: "⚽🏀 La plataforma para clubes sub-16",
@@ -309,9 +345,26 @@ export function generateMetadata({ params }: { params: { locale: string } }) {
   };
 }
 
-export default function Home({ params }: { params: { locale: string } }) {
+export default function Home({
+  params,
+  searchParams,
+}: {
+  params: { locale: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
   const locale = isLocale(params.locale) ? params.locale : defaultLocale;
   const t = translations[locale];
+  const session = readSessionFromCookies();
+  const errorKey = typeof searchParams?.authError === "string" ? searchParams.authError : undefined;
+  const authErrorMessage =
+    errorKey === "state"
+      ? t.auth.errors.state
+      : errorKey === "callback"
+        ? t.auth.errors.callback
+        : errorKey
+          ? t.auth.errors.generic
+          : null;
+  const signedInName = session?.name ?? session?.email ?? t.auth.unknownUser;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-purple-50 text-slate-900">
@@ -325,7 +378,7 @@ export default function Home({ params }: { params: { locale: string } }) {
             <p className="text-sm text-slate-600">Built for football & basketball academies</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 text-sm font-medium sm:gap-4">
+        <div className="flex flex-col items-end gap-3 text-sm font-medium sm:flex-row sm:items-center sm:gap-4">
           <nav className="hidden gap-3 sm:flex">
             <a className="rounded-full bg-white px-4 py-2 text-slate-700 shadow-sm shadow-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg" href="#pricing">
               {t.nav.pricing}
@@ -334,22 +387,62 @@ export default function Home({ params }: { params: { locale: string } }) {
               {t.nav.start}
             </a>
           </nav>
-          <div className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs text-slate-600 shadow-sm shadow-slate-200 ring-1 ring-slate-100">
-            <span className="hidden font-semibold text-slate-800 sm:inline">{t.localeSwitcher.label}:</span>
-            {locales.map((loc) => (
+          <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <div className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs text-slate-600 shadow-sm shadow-slate-200 ring-1 ring-slate-100">
+              <span className="hidden font-semibold text-slate-800 sm:inline">{t.localeSwitcher.label}:</span>
+              {locales.map((loc) => (
+                <a
+                  key={loc}
+                  href={`/${loc}`}
+                  className={`rounded-full px-3 py-1 font-semibold transition hover:-translate-y-0.5 hover:shadow-sm hover:shadow-indigo-200 ${
+                    loc === locale ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {loc.toUpperCase()}
+                </a>
+              ))}
+            </div>
+            {session ? (
+              <div className="flex items-center gap-3 rounded-full bg-white px-3 py-2 text-xs text-slate-700 shadow-sm shadow-slate-200 ring-1 ring-slate-100">
+                {session.picture ? (
+                  <Image
+                    alt={signedInName}
+                    className="h-8 w-8 rounded-full object-cover"
+                    height={32}
+                    src={session.picture}
+                    width={32}
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-white">{signedInName.charAt(0)}</div>
+                )}
+                <div className="text-left">
+                  <p className="text-[11px] text-slate-500">{t.auth.signedInAs}</p>
+                  <p className="text-sm font-semibold text-slate-800">{signedInName}</p>
+                </div>
+                <form action="/api/auth/logout" method="post">
+                  <button className="rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-indigo-200 transition hover:-translate-y-0.5 hover:shadow-lg" type="submit">
+                    {t.auth.signOut}
+                  </button>
+                </form>
+              </div>
+            ) : (
               <a
-                key={loc}
-                href={`/${loc}`}
-                className={`rounded-full px-3 py-1 font-semibold transition hover:-translate-y-0.5 hover:shadow-sm hover:shadow-indigo-200 ${
-                  loc === locale ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"
-                }`}
+                className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-800 shadow-sm shadow-slate-200 ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:shadow-lg"
+                href={`/api/auth/login?from=/${locale}`}
               >
-                {loc.toUpperCase()}
+                {t.auth.signIn}
               </a>
-            ))}
+            )}
           </div>
         </div>
       </header>
+
+      {authErrorMessage ? (
+        <div className="mx-auto mt-2 max-w-6xl rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-100">
+          <p className="font-semibold">{authErrorMessage}</p>
+          <p className="text-red-700/80">{t.auth.retry}</p>
+        </div>
+      ) : null}
 
       <main className="mx-auto flex max-w-6xl flex-col gap-20 px-6 pb-20">
         <section className="grid gap-10 overflow-hidden rounded-3xl bg-white/80 p-10 shadow-xl shadow-indigo-100 ring-1 ring-indigo-50 backdrop-blur">
