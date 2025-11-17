@@ -8,6 +8,8 @@ import {
   setSessionCookie,
 } from "@/lib/auth/session";
 import { DEFAULT_SIGN_UP_ROLE } from "@/lib/auth/roles";
+import { upsertSupabaseUser } from "@/lib/supabase/admin";
+import { SessionUser } from "@/lib/auth/SessionUser";
 
 async function exchangeCodeForTokens(code: string, redirectUri: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -69,13 +71,17 @@ export async function GET(request: NextRequest) {
   try {
     const { access_token: accessToken } = await exchangeCodeForTokens(code, `${baseUrl}/api/auth/callback`);
     const profile = await fetchProfile(accessToken);
-    const sessionToken = createSessionToken({
+    const sessionUser: SessionUser = {
       id: profile.sub,
       role: DEFAULT_SIGN_UP_ROLE,
-      name: profile.name,
-      email: profile.email,
-      picture: profile.picture,
-    });
+      name: profile.name ?? null,
+      email: profile.email ?? null,
+      picture: profile.picture ?? null,
+    };
+
+    await upsertSupabaseUser(sessionUser);
+
+    const sessionToken = createSessionToken(sessionUser);
 
     const response = NextResponse.redirect(redirectTarget);
     setSessionCookie(response, sessionToken);
