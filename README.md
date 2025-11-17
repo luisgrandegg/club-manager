@@ -34,6 +34,27 @@ AUTH_BASE_URL=https://your-domain.example
 
 After the variables are set and Google OAuth redirect URIs include `AUTH_BASE_URL/api/auth/callback`, users can sign in with Google from the landing page header. A POST to `/api/auth/logout` clears the session cookie.
 
+## Supabase (user store)
+
+Supabase is used to persist authenticated users while keeping Google as the identity provider. Configure these server-side variables (Vercel sets them when the Supabase integration is enabled):
+
+```
+SUPABASE_URL=<project API URL>
+SUPABASE_SERVICE_ROLE_KEY=<service role key used only on the server>
+```
+
+Expected table schema in Supabase Postgres (schema name `user`):
+
+```
+id text primary key
+role text not null
+name text null
+email text null
+picture text null
+```
+
+Ensure row-level security policies allow the service role to insert/update rows (the service role bypasses RLS by default). The login callback upserts a row keyed by `id` using the Google profile data and `DEFAULT_SIGN_UP_ROLE`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
