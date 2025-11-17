@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { defaultLocale } from "@/app/i18n";
 import { getBaseUrl, setStateCookie } from "@/lib/auth/session";
 
 function sanitizeRedirectPath(path: string | null) {

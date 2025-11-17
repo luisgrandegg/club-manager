@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { defaultLocale } from "@/app/i18n";
 import {
   clearSessionCookie,
   clearStateCookie,
@@ -8,6 +7,7 @@ import {
   readStateCookie,
   setSessionCookie,
 } from "@/lib/auth/session";
+import { DEFAULT_SIGN_UP_ROLE } from "@/lib/auth/roles";
 
 async function exchangeCodeForTokens(code: string, redirectUri: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -71,6 +71,7 @@ export async function GET(request: NextRequest) {
     const profile = await fetchProfile(accessToken);
     const sessionToken = createSessionToken({
       id: profile.sub,
+      role: DEFAULT_SIGN_UP_ROLE,
       name: profile.name,
       email: profile.email,
       picture: profile.picture,

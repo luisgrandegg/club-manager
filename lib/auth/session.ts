@@ -2,10 +2,12 @@ import type { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "node:crypto";
 import { SessionUser } from "./SessionUser";
-import { SESSION_COOKIE_NAME,
+import {
+  SESSION_COOKIE_NAME,
   STATE_COOKIE_NAME,
-  SESSION_MAX_AGE_SECONDS
-} from './constants';
+  SESSION_MAX_AGE_SECONDS,
+} from "./constants";
+import { isValidRole } from "./roles";
 
 const encoder = new TextEncoder();
 
@@ -36,6 +38,7 @@ export function createSessionToken(user: SessionUser) {
   const signatureSeed = base64urlEncode(
     JSON.stringify({
       sub: user.id,
+      role: user.role,
       name: user.name,
       email: user.email,
       picture: user.picture,
@@ -51,7 +54,50 @@ export function createSessionToken(user: SessionUser) {
   return `${signatureSeed}.${signature}`;
 }
 
+export function parseSessionToken(token: string) {
+  const [encodedPayload, signature] = token.split(".");
+  if (!encodedPayload || !signature) return null;
 
+  const expectedSignature = signPayload(encodedPayload);
+  if (!expectedSignature || signature.length !== expectedSignature.length) {
+    return null;
+  }
+
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(base64urlDecode(encodedPayload)) as {
+      sub?: string;
+      role?: string;
+      name?: string | null;
+      email?: string | null;
+      picture?: string | null;
+      exp?: number;
+    };
+
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      return null;
+    }
+
+    if (!payload.sub || !payload.role || !isValidRole(payload.role)) return null;
+
+    return {
+      user: {
+        id: payload.sub,
+        role: payload.role,
+        name: payload.name,
+        email: payload.email,
+        picture: payload.picture,
+      } satisfies SessionUser,
+      encodedPayload,
+    };
+  } catch (error) {
+    console.error("Failed to read session", error);
+    return null;
+  }
+}
 
 export function setSessionCookie(response: NextResponse, token: string) {
   response.cookies.set(SESSION_COOKIE_NAME, token, {
