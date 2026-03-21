@@ -2,6 +2,8 @@
 
 ## Architecture
 
+> For visual diagrams (workspace graph, API routes, ER diagram, request flow) see **[docs/architecture.md](docs/architecture.md)**.
+
 Turborepo monorepo managed with **pnpm workspaces**.
 
 ```
