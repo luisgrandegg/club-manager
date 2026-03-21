@@ -34,3 +34,6 @@ coverage/
 
 # Generated (committed intentionally, but ignore local overrides)
 # apps/api/openapi.json is committed — do not add here
+
+# Next.js generated files
+next-env.d.ts
