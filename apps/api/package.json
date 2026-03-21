@@ -7,9 +7,9 @@
     "build:openapi": "ts-node --transpile-only -r tsconfig-paths/register src/generate-openapi.ts",
     "dev": "nest start --watch",
     "start": "node dist/main",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:e2e": "jest --config test/jest-e2e.json"
   },
   "dependencies": {

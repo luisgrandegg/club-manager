@@ -81,17 +81,25 @@ All REST endpoints. 🔒 = requires `Authorization: Bearer <token>`.
 graph LR
     subgraph Public
         N1["GET /api/health"]
+        N2["POST /api/auth/register"]
+        N3["POST /api/auth/login"]
+        N4["POST /api/auth/refresh"]
+        N5["GET /api/clubs"]
+        N7["GET /api/clubs/{id}"]
     end
     subgraph clubs["Clubs 🔒"]
-        N2["GET /api/clubs"]
-        N3["POST /api/clubs"]
-        N4["GET /api/clubs/{id}"]
-        N5["PATCH /api/clubs/{id}"]
-        N6["DELETE /api/clubs/{id}"]
+        N6["POST /api/clubs"]
+        N8["PATCH /api/clubs/{id}"]
+        N9["DELETE /api/clubs/{id}"]
+    end
+    subgraph members["Members 🔒"]
+        N10["GET /api/clubs/{clubId}/members"]
+        N11["POST /api/clubs/{clubId}/members/join"]
+        N12["DELETE /api/clubs/{clubId}/members/leave"]
     end
 ```
 
-_6 endpoint(s) sourced from `apps/api/openapi.json`. Run `pnpm generate:sdk` after changing endpoints._
+_12 endpoint(s) sourced from `apps/api/openapi.json`. Run `pnpm generate:sdk` after changing endpoints._
 
 Controllers live in `apps/api/src/{auth,clubs,members}/`.
 Swagger UI at `http://localhost:3001/api/docs` during development.

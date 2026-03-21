@@ -1,0 +1,142 @@
+.layout {
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 2rem;
+  height: 56px;
+  display: flex;
+  align-items: center;
+}
+
+.back {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.back:hover {
+  text-decoration: underline;
+}
+
+.main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.clubCard,
+.membersCard {
+  background: #fff;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0.5rem 1rem;
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.details dt {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.details dd {
+  margin: 0;
+  color: #111827;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.editActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.memberList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.memberItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.memberId {
+  color: #374151;
+}
+
+.noMembers {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.loading,
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 1rem;
+  color: #6b7280;
+}
+
+.notFound a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+}
+
+.dialogActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}

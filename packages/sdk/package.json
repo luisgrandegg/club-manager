@@ -17,7 +17,7 @@
     "generate": "openapi-typescript ../../apps/api/openapi.json -o src/schema.ts",
     "build": "tsup",
     "dev": "tsup --watch",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

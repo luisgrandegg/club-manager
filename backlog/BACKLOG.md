@@ -16,14 +16,11 @@ _All shipped._
 
 ## Web
 
-- [004 — Login & register page](todo/004-login-register-page.md) — Authentication UI for members
-- [005 — Dashboard: clubs list](todo/005-dashboard-clubs-list.md) — Member dashboard showing available clubs
-- [006 — Club detail & membership](todo/006-club-detail-membership.md) — Club detail view and join/leave actions
+_All shipped._
 
 ## Site
 
-- [007 — Public homepage](todo/007-public-homepage.md) — Hero section, features overview, CTA
-- [008 — Public club directory](todo/008-public-club-directory.md) — SEO-friendly listing of all public clubs
+_All shipped._
 
 ## Design System
 
