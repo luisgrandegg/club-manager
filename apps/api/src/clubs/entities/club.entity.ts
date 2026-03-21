@@ -1,18 +1,41 @@
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { User } from '../../users/user.entity';
 
+@Entity('clubs')
 export class Club {
-  @ApiProperty({ example: 1, description: 'Unique identifier' })
+  @PrimaryGeneratedColumn()
+  @ApiProperty({ example: 1 })
   id: number;
 
-  @ApiProperty({ example: 'FC Example', description: 'Club name' })
+  @Column({ length: 100 })
+  @ApiProperty({ example: 'FC Example' })
   name: string;
 
-  @ApiProperty({ example: 'A premier football club', description: 'Short description' })
+  @Column({ length: 500, default: '' })
+  @ApiProperty({ example: 'A premier football club' })
   description: string;
 
-  @ApiProperty({ example: 'Madrid', description: 'City where the club is based' })
+  @Column({ length: 100 })
+  @ApiProperty({ example: 'Madrid' })
   city: string;
 
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Creation timestamp' })
-  createdAt: string;
+  @Column()
+  @ApiProperty({ example: 1, description: 'ID of the user who created the club' })
+  ownerId: number;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'ownerId' })
+  owner: User;
+
+  @CreateDateColumn()
+  @ApiProperty()
+  createdAt: Date;
 }
