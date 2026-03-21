@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": ["Edit"]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Loading backlog...",
+            "command": "cd /home/user/club-manager && BACKLOG=\"backlog/BACKLOG.md\"; TODO_DIR=\"backlog/todo\"; if [ ! -f \"$BACKLOG\" ]; then printf '{\"systemMessage\": \"No backlog found.\"}'; exit 0; fi; SUMMARY=\"=== BACKLOG — session start ===\\n\\n\"; SUMMARY+=\"$(cat \"$BACKLOG\")\\n\\n\"; SUMMARY+=\"--- Priority order (High → Medium → Low) ---\\n\\n\"; for priority in High Medium Low; do files=$(grep -rl \"\\*\\*Priority:\\*\\* $priority\" \"$TODO_DIR\" 2>/dev/null | sort); if [ -n \"$files\" ]; then SUMMARY+=\"[$priority]\\n\"; for f in $files; do title=$(head -1 \"$f\" | sed 's/^# //'); SUMMARY+=\"  • $title\\n\"; done; SUMMARY+=\"\\n\"; fi; done; printf '{\"systemMessage\": \"%s\"}' \"$(echo -e \"$SUMMARY\" | sed 's/\"/\\'\\''/ g; s/$/\\\\n/' | tr -d '\\n')\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Backlog reminder...",
+            "command": "cd /home/user/club-manager && TODO_DIR=\"backlog/todo\"; COMPLETED_DIR=\"backlog/completed\"; todo_count=$(ls \"$TODO_DIR\"/*.md 2>/dev/null | wc -l | tr -d ' '); completed_count=$(ls \"$COMPLETED_DIR\"/*.md 2>/dev/null | wc -l | tr -d ' '); MSG=\"=== SESSION END — Backlog review ===\\n\\n${todo_count} feature(s) remaining in todo/, ${completed_count} in completed/.\\n\\nBefore finishing:\\n  1. Did you complete any features? Move their .md to backlog/completed/, add Completed: date, check off criteria, remove from BACKLOG.md.\\n  2. Did you discover new work? Add it to backlog/todo/ and link it in BACKLOG.md.\\n  3. Did priorities change? Update the Priority field in any affected .md files.\\n\"; printf '{\"systemMessage\": \"%s\"}' \"$(echo -e \"$MSG\" | sed 's/\"/\\'\\''/ g; s/$/\\\\n/' | tr -d '\\n')\""
+          }
+        ]
+      }
+    ]
+  }
+}
