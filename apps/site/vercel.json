@@ -1,0 +1,5 @@
+{
+  "installCommand": "npm install -g pnpm@9 && pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter '@club-manager/site...' build",
+  "framework": "nextjs"
+}
