@@ -17,7 +17,10 @@ async function bootstrap() {
     }),
   );
 
-  app.enableCors();
+  const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : true; // allow all in development
+  app.enableCors({ origin: corsOrigins, credentials: true });
 
   const config = new DocumentBuilder()
     .setTitle('Club Manager API')

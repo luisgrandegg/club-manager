@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: club-manager-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: "npm install -g pnpm@9 && pnpm install --frozen-lockfile && pnpm --filter '@club-manager/api...' build"
+    startCommand: "node apps/api/dist/main"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
