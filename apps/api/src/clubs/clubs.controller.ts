@@ -24,6 +24,7 @@ import { CreateClubDto } from './dto/create-club.dto';
 import { UpdateClubDto } from './dto/update-club.dto';
 import { Club } from './entities/club.entity';
 import { CurrentUser, JwtPayload } from '../common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('clubs')
 @ApiBearerAuth()
@@ -32,6 +33,7 @@ export class ClubsController {
   constructor(private readonly clubsService: ClubsService) {}
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'List all clubs (paginated)' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -45,6 +47,7 @@ export class ClubsController {
   }
 
   @Get(':id')
+  @Public()
   @ApiOperation({ summary: 'Get a club by ID' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, type: Club })

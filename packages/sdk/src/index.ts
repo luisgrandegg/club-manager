@@ -42,4 +42,4 @@ export function setAuthToken(token: string | null): void {
   authToken = token;
 }
 
-export type { paths } from './schema';
+export type { paths, components } from './schema';

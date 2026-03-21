@@ -25,30 +25,140 @@
         ]
       }
     },
-    "/api/clubs": {
-      "get": {
-        "operationId": "ClubsController_findAll",
+    "/api/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "",
+          "201": {
+            "description": "User created, tokens returned",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Club"
-                  }
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already in use"
+          }
+        },
+        "summary": "Register a new user",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "summary": "Login and receive tokens",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New access token returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessToken"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired refresh token"
+          }
+        },
+        "summary": "Exchange refresh token for new access token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/clubs": {
+      "get": {
+        "operationId": "ClubsController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of clubs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClubPage"
                 }
               }
             }
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
         "summary": "List all clubs",
         "tags": [
           "clubs"
@@ -121,11 +231,6 @@
             "description": "Club not found"
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
         "summary": "Get a club by ID",
         "tags": [
           "clubs"
@@ -208,6 +313,122 @@
           "clubs"
         ]
       }
+    },
+    "/api/clubs/{clubId}/members": {
+      "get": {
+        "operationId": "MembersController_listMembers",
+        "parameters": [
+          {
+            "name": "clubId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of memberships",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Membership"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Club not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List members of a club",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/api/clubs/{clubId}/members/join": {
+      "post": {
+        "operationId": "MembersController_join",
+        "parameters": [
+          {
+            "name": "clubId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Joined successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Membership"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already a member"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Join a club",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/api/clubs/{clubId}/members/leave": {
+      "delete": {
+        "operationId": "MembersController_leave",
+        "parameters": [
+          {
+            "name": "clubId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Left successfully"
+          },
+          "403": {
+            "description": "Owner cannot leave"
+          },
+          "404": {
+            "description": "Not a member"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Leave a club",
+        "tags": [
+          "members"
+        ]
+      }
     }
   },
   "info": {
@@ -218,8 +439,16 @@
   },
   "tags": [
     {
+      "name": "auth",
+      "description": "Authentication endpoints"
+    },
+    {
       "name": "clubs",
       "description": "Club management endpoints"
+    },
+    {
+      "name": "members",
+      "description": "Club membership endpoints"
     },
     {
       "name": "health",
@@ -236,6 +465,78 @@
       }
     },
     "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "strongpassword",
+            "minLength": 8
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "strongpassword"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "RefreshDto": {
+        "type": "object",
+        "properties": {
+          "refresh_token": {
+            "type": "string"
+          }
+        },
+        "required": ["refresh_token"]
+      },
+      "TokenPair": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          }
+        },
+        "required": ["access_token", "refresh_token"]
+      },
+      "AccessToken": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          }
+        },
+        "required": ["access_token"]
+      },
+      "ClubPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Club" }
+          },
+          "total": { "type": "number" },
+          "page": { "type": "number" },
+          "limit": { "type": "number" }
+        },
+        "required": ["items", "total", "page", "limit"]
+      },
       "Club": {
         "type": "object",
         "properties": {
@@ -259,19 +560,18 @@
             "example": "Madrid",
             "description": "City where the club is based"
           },
+          "ownerId": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the user who created the club"
+          },
           "createdAt": {
             "type": "string",
             "example": "2024-01-01T00:00:00.000Z",
             "description": "Creation timestamp"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "description",
-          "city",
-          "createdAt"
-        ]
+        "required": ["id", "name", "description", "city", "ownerId", "createdAt"]
       },
       "CreateClubDto": {
         "type": "object",
@@ -293,10 +593,7 @@
             "description": "City where the club is based"
           }
         },
-        "required": [
-          "name",
-          "city"
-        ]
+        "required": ["name", "city"]
       },
       "UpdateClubDto": {
         "type": "object",
@@ -317,6 +614,28 @@
             "description": "City where the club is based"
           }
         }
+      },
+      "Membership": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "userId": {
+            "type": "number",
+            "example": 1
+          },
+          "clubId": {
+            "type": "number",
+            "example": 1
+          },
+          "joinedAt": {
+            "type": "string",
+            "example": "2024-01-01T00:00:00.000Z"
+          }
+        },
+        "required": ["id", "userId", "clubId", "joinedAt"]
       }
     }
   }
