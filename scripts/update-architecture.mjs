@@ -53,70 +53,132 @@ function workspaceDirs(group) {
     .filter(d => existsSync(join(d, 'package.json')));
 }
 
-// ─── 1. Workspace Dependency Graph ───────────────────────────────────────────
+// Static metadata (tech stack + descriptions) for known workspace packages.
+// Add a new entry here whenever a new app or package joins the monorepo.
+const CONTAINER_META = {
+  '@club-manager/api':           { tech: 'NestJS 10, TypeORM',  descr: 'REST API · JWT auth · OpenAPI · :3001' },
+  '@club-manager/web':           { tech: 'React 19, Vite',      descr: 'Members dashboard SPA · :3000' },
+  '@club-manager/site':          { tech: 'Next.js 15',          descr: 'Public marketing site · :3002' },
+  '@club-manager/sdk':           { tech: 'openapi-fetch',       descr: 'Auto-generated API client library' },
+  '@club-manager/design-system': { tech: 'React, tsup',         descr: 'Shared UI component library' },
+};
 
-function buildWorkspaceGraph() {
-  const appDirs = workspaceDirs('apps');
-  const pkgDirs = workspaceDirs('packages');
-  const allDirs = [...appDirs, ...pkgDirs];
+const MODULE_META = {
+  AppModule:     { tech: 'NestJS',              descr: 'Root module · global JWT guard' },
+  AuthModule:    { tech: 'NestJS, Passport, JWT', descr: 'Authentication & token management' },
+  ClubsModule:   { tech: 'NestJS, TypeORM',     descr: 'Club CRUD operations' },
+  MembersModule: { tech: 'NestJS, TypeORM',     descr: 'Club membership management' },
+  UsersModule:   { tech: 'NestJS, TypeORM',     descr: 'User account management' },
+};
 
-  const meta = {}; // packageName → { short, group, internalDeps }
-  for (const dir of allDirs) {
+// ─── 1. C4 Container Diagram ──────────────────────────────────────────────────
+
+function buildC4Container() {
+  const allDirs = [...workspaceDirs('apps'), ...workspaceDirs('packages')];
+
+  const containers = allDirs.map(dir => {
     const pkg = readJson(join(dir, 'package.json'));
     const name = pkg.name;
-    const short = name.replace('@club-manager/', '');
-    const group = dir.startsWith(join(ROOT, 'apps')) ? 'apps' : 'packages';
+    const alias = name.replace('@club-manager/', '').replace(/-/g, '_');
     const allDeps = { ...pkg.dependencies, ...pkg.devDependencies, ...pkg.peerDependencies };
     const internalDeps = Object.keys(allDeps).filter(d => d.startsWith('@club-manager/'));
-    meta[name] = { short, group, internalDeps };
+    const { tech = '', descr = '' } = CONTAINER_META[name] ?? {};
+    return { name, alias, internalDeps, tech, descr };
+  });
+
+  const byAlias = Object.fromEntries(containers.map(c => [c.name, c.alias]));
+
+  const lines = ['```mermaid', 'C4Container'];
+  lines.push('');
+  lines.push('    Person(member, "Member", "Logged-in club member")');
+  lines.push('    Person(visitor, "Visitor", "Public site visitor")');
+  lines.push('');
+  lines.push('    System_Boundary(cm, "Club Manager") {');
+  for (const { alias, name, tech, descr } of containers) {
+    lines.push(`        Container(${alias}, "${name}", "${tech}", "${descr}")`);
   }
+  lines.push('    }');
+  lines.push('');
+  lines.push('    ContainerDb(db, "PostgreSQL", "Database", "users · clubs · memberships")');
+  lines.push('');
 
-  const descriptions = {
-    '@club-manager/api': 'NestJS REST API · :3001',
-    '@club-manager/web': 'React SPA · :3000',
-    '@club-manager/site': 'Next.js · :3002',
-    '@club-manager/design-system': 'UI components',
-    '@club-manager/sdk': 'Auto-generated API client',
-  };
-
-  const appsEntries = Object.entries(meta).filter(([, v]) => v.group === 'apps');
-  const pkgsEntries = Object.entries(meta).filter(([, v]) => v.group === 'packages');
-
-  const lines = ['```mermaid', 'graph LR'];
-
-  lines.push('    subgraph apps');
-  for (const [name, { short }] of appsEntries) {
-    const desc = descriptions[name] ?? '';
-    lines.push(`        ${short}["${name}\\n${desc}"]`);
-  }
-  lines.push('    end\n');
-
-  lines.push('    subgraph packages');
-  for (const [name, { short }] of pkgsEntries) {
-    const desc = descriptions[name] ?? '';
-    lines.push(`        ${short}["${name}\\n${desc}"]`);
-  }
-  lines.push('    end\n');
-
-  // Runtime dependency edges
-  for (const [name, { short, internalDeps }] of Object.entries(meta)) {
+  // Workspace dependency edges
+  for (const { alias, internalDeps } of containers) {
     for (const dep of internalDeps) {
-      if (meta[dep]) {
-        lines.push(`    ${short} --> ${meta[dep].short}`);
-      }
+      if (byAlias[dep]) lines.push(`    Rel(${alias}, ${byAlias[dep]}, "Uses")`);
     }
   }
 
-  // SDK generation edge (dotted)
-  if (meta['@club-manager/api'] && meta['@club-manager/sdk']) {
-    lines.push('    api -. "openapi.json\\n(pnpm generate:sdk)" .-> sdk');
+  // api → db (runtime) and api → sdk (generates)
+  if (byAlias['@club-manager/api']) {
+    lines.push('    Rel(api, db, "Reads/Writes", "TypeORM/SQL")');
   }
+  if (byAlias['@club-manager/api'] && byAlias['@club-manager/sdk']) {
+    lines.push('    Rel_Back(sdk, api, "Generated from", "openapi.json")');
+  }
+
+  // Personas → front-ends
+  if (byAlias['@club-manager/web'])  lines.push('    Rel(member, web, "Uses", "HTTPS")');
+  if (byAlias['@club-manager/site']) lines.push('    Rel(visitor, site, "Browses", "HTTPS")');
 
   lines.push('```');
   return lines.join('\n');
 }
 
-// ─── 2. API Route Map ─────────────────────────────────────────────────────────
+// ─── 2. C4 Component Diagram (NestJS API) ────────────────────────────────────
+
+function buildC4ApiComponents() {
+  const moduleFiles = findFiles(join(ROOT, 'apps/api/src'), /\.module\.ts$/);
+  if (moduleFiles.length === 0) return '_No `*.module.ts` files found in `apps/api/src`._';
+
+  const modules = moduleFiles.map(filePath => {
+    const src = readText(filePath);
+    const classMatch = src.match(/export class (\w+)/);
+    if (!classMatch) return null;
+    const className = classMatch[1];
+
+    // Collect imported sibling modules via relative import statements
+    const internalImports = [...src.matchAll(/import\s*\{([^}]+)\}\s*from\s*'\.+\/[^']+\.module'/g)]
+      .flatMap(m => m[1].split(',').map(s => s.trim()))
+      .filter(s => s.endsWith('Module'));
+
+    const usesDb = /TypeOrmModule\.forFeature/.test(src);
+    const { tech = 'NestJS', descr = className } = MODULE_META[className] ?? {};
+    return { className, internalImports, usesDb, tech, descr };
+  }).filter(Boolean);
+
+  const moduleNames = new Set(modules.map(m => m.className));
+
+  const lines = ['```mermaid', 'C4Component'];
+  lines.push('');
+  lines.push('    Container_Boundary(api, "api — NestJS REST API") {');
+  for (const { className, tech, descr } of modules) {
+    lines.push(`        Component(${className}, "${className}", "${tech}", "${descr}")`);
+  }
+  lines.push('    }');
+  lines.push('');
+  lines.push('    ContainerDb(db, "PostgreSQL", "Database", "users · clubs · memberships")');
+  lines.push('');
+
+  // Inter-module dependencies
+  for (const { className, internalImports } of modules) {
+    for (const imp of internalImports) {
+      if (moduleNames.has(imp)) lines.push(`    Rel(${className}, ${imp}, "imports")`);
+    }
+  }
+
+  // Modules with direct DB access
+  for (const { className, usesDb } of modules) {
+    if (usesDb) lines.push(`    Rel(${className}, db, "reads/writes")`);
+  }
+
+  lines.push('```');
+  lines.push('');
+  lines.push('_Sourced from `apps/api/src/*.module.ts` files._');
+  return lines.join('\n');
+}
+
+// ─── 3. API Route Map ─────────────────────────────────────────────────────────
 
 function buildApiRouteMap() {
   const openApiPath = join(ROOT, 'apps/api/openapi.json');
@@ -177,7 +239,7 @@ function buildApiRouteMap() {
   return lines.join('\n');
 }
 
-// ─── 3. ER Diagram ────────────────────────────────────────────────────────────
+// ─── 4. ER Diagram ────────────────────────────────────────────────────────────
 
 function normalizeTsType(raw) {
   const base = raw.replace(/\s*\|.*/, '').trim(); // strip "| null", "| undefined"
@@ -273,7 +335,7 @@ function buildErDiagram() {
   return lines.join('\n');
 }
 
-// ─── 4. Static Data-Flow ─────────────────────────────────────────────────────
+// ─── 5. Static Data-Flow ─────────────────────────────────────────────────────
 
 const DATA_FLOW = `\`\`\`mermaid
 sequenceDiagram
@@ -305,20 +367,30 @@ const doc = `# Club Manager — Architecture Diagrams
 > Auto-generated on **${today}** by \`scripts/update-architecture.mjs\`.
 > Do not edit manually — run \`node scripts/update-architecture.mjs\`, or just commit (the pre-commit hook handles it).
 
+Five diagrams — C4 Levels 2 and 3 for structure, plus operational views for routes and data.
+
 ---
 
-## 1. Workspace Dependency Graph
+## 1. C4 Container Diagram
 
-Who depends on whom across the monorepo.
+Deployable units, shared libraries, and user personas. _(C4 Level 2)_
 
-${buildWorkspaceGraph()}
+${buildC4Container()}
 
 **Key rule:** \`sdk\` is auto-generated from \`api/openapi.json\` — never edit \`packages/sdk/src/schema.ts\` by hand.
 Regenerate with: \`pnpm generate:sdk\`
 
 ---
 
-## 2. API Route Map
+## 2. C4 Component Diagram — API
+
+Internal NestJS modules and their dependencies. _(C4 Level 3)_
+
+${buildC4ApiComponents()}
+
+---
+
+## 3. API Route Map
 
 All REST endpoints. 🔒 = requires \`Authorization: Bearer <token>\`.
 
@@ -329,15 +401,15 @@ Swagger UI at \`http://localhost:3001/api/docs\` during development.
 
 ---
 
-## 3. Entity-Relationship Diagram
+## 4. Entity-Relationship Diagram
 
-Database models managed by TypeORM.
+Database models managed by TypeORM. _(C4 Level 4 / Code)_
 
 ${buildErDiagram()}
 
 ---
 
-## 4. Request Data-Flow
+## 5. Request Data-Flow
 
 End-to-end journey of a protected API call.
 
