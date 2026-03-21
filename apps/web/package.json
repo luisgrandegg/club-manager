@@ -7,7 +7,7 @@
     "build": "tsc -b && vite build",
     "dev": "vite --port 3000",
     "preview": "vite preview",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint src",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

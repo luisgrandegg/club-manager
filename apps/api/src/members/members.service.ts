@@ -18,7 +18,7 @@ export class MembersService {
   ) {}
 
   async join(clubId: number, userId: number): Promise<Membership> {
-    const club = await this.clubsService.findOne(clubId);
+    await this.clubsService.findOne(clubId);
 
     const existing = await this.membershipsRepo.findOne({
       where: { clubId, userId },

@@ -31,7 +31,10 @@ function parseJwtPayload(token: string): { sub: number; email: string } {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Start loading only if we have a refresh token to attempt restoration with
+  const [isLoading, setIsLoading] = useState(
+    () => !!localStorage.getItem(REFRESH_TOKEN_KEY),
+  );
 
   const applyTokens = useCallback(
     (accessToken: string, refreshToken?: string) => {
@@ -54,10 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Try to restore session from stored refresh token on mount
   useEffect(() => {
     const storedRefresh = localStorage.getItem(REFRESH_TOKEN_KEY);
-    if (!storedRefresh) {
-      setIsLoading(false);
-      return;
-    }
+    if (!storedRefresh) return;
 
     apiClient
       .POST('/api/auth/refresh', { body: { refresh_token: storedRefresh } })
