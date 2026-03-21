@@ -1,0 +1,323 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "AppController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "ok"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Health check",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/clubs": {
+      "get": {
+        "operationId": "ClubsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Club"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all clubs",
+        "tags": [
+          "clubs"
+        ]
+      },
+      "post": {
+        "operationId": "ClubsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClubDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Club"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new club",
+        "tags": [
+          "clubs"
+        ]
+      }
+    },
+    "/api/clubs/{id}": {
+      "get": {
+        "operationId": "ClubsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Club"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Club not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a club by ID",
+        "tags": [
+          "clubs"
+        ]
+      },
+      "patch": {
+        "operationId": "ClubsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClubDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Club"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Club not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a club",
+        "tags": [
+          "clubs"
+        ]
+      },
+      "delete": {
+        "operationId": "ClubsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Club deleted"
+          },
+          "404": {
+            "description": "Club not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a club",
+        "tags": [
+          "clubs"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Club Manager API",
+    "description": "REST API for the Club Manager application",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "clubs",
+      "description": "Club management endpoints"
+    },
+    {
+      "name": "health",
+      "description": "Health check endpoints"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "Club": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1,
+            "description": "Unique identifier"
+          },
+          "name": {
+            "type": "string",
+            "example": "FC Example",
+            "description": "Club name"
+          },
+          "description": {
+            "type": "string",
+            "example": "A premier football club",
+            "description": "Short description"
+          },
+          "city": {
+            "type": "string",
+            "example": "Madrid",
+            "description": "City where the club is based"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2024-01-01T00:00:00.000Z",
+            "description": "Creation timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "city",
+          "createdAt"
+        ]
+      },
+      "CreateClubDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "FC Example",
+            "description": "Club name",
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "example": "A premier football club",
+            "description": "Short description"
+          },
+          "city": {
+            "type": "string",
+            "example": "Madrid",
+            "description": "City where the club is based"
+          }
+        },
+        "required": [
+          "name",
+          "city"
+        ]
+      },
+      "UpdateClubDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "FC Example Updated",
+            "description": "Club name"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated description",
+            "description": "Short description"
+          },
+          "city": {
+            "type": "string",
+            "example": "Barcelona",
+            "description": "City where the club is based"
+          }
+        }
+      }
+    }
+  }
+}
